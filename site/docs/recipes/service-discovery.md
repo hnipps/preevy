@@ -17,7 +17,7 @@ services:
 Preevy will generate the following environment variable which will contain the generated preview environment URL:
 
 ```bash
-PREEVY_BASE_URI_SERVICE_NAME_3000=https://service-name-3000-envid-clientid.livecycle.run/
+PREEVY_BASE_URI_SERVICE_NAME_80=https://<service_name>-<profile_name>-<branch>-<envid>.livecycle.run/
 ```
 
 ## Problem
@@ -27,11 +27,12 @@ In development environments, it's common for frontend applications to communicat
 Service-to-service communication within containers can be handled using Docker Compose's built-in feature, where services can access other containers using the service name as a hostname [Docker Networking](https://docs.docker.com/compose/networking/).
 
 However, this method does not apply to code executed in the browser, which creates difficulties for frontend applications when connecting to backend services through exposed ports. The tunneling URL needs to be substituted, but it cannot be determined at build time.
+
 ## Solution
 
 Preevy offers a simple solution for this problem by exposing the tunneling URL as an environment variable at Compose *build time*. Environment variables can be [interpolated](https://docs.docker.com/compose/compose-file/12-interpolation/) in the Compose file.
 
-The environment variable is named after the service name + port, with the prefix `PREEVY_BASE_URI`. For example, if the service name is `frontend` and is exposed on port 4000, the environment variable will be `PREEVY_BASE_URI_FRONTEND_4000`.
+The environment variable is named after the service name + internal port, with the prefix `PREEVY_BASE_URI`. For example, if the service name is `frontend` and has the internal port 4000 defined, the environment variable will be `PREEVY_BASE_URI_FRONTEND_4000`.
 
 If the service is exposed on multiple ports, the environment variable will be created for each port.
 
@@ -66,7 +67,7 @@ services:
            - 9005:3000
      my-frontend:
           environment:
-          - API_URL=${PREEVY_BASE_URI_MY_BACKEND_9006:-http://localhost:9006/}
+          - API_URL=${PREEVY_BASE_URI_MY_BACKEND_3000:-http://localhost:9006/}
      my-backend:
           ...
           ports:
